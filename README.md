@@ -8,12 +8,16 @@ extern crate epochs;
 fn main() {
     let ndt = epochs::unix(1234567890);
     println!("{:?}", ndt);
+
+    let ndt2 = epochs::chrome(12879041490654321);
+    println!("{:?}", ndt2);
 }
 
 $ rustc -L./Epochs-rust/target/debug/deps use_epochs.rs
 
 $ ./use_epochs 
 2009-02-13T23:31:30
+2009-02-13T23:31:30.654321
 ```
 
 ## See Also
