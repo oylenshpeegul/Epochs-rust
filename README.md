@@ -1,5 +1,5 @@
 # Epochs-rust
-Convert various epoch times to chrono::NaiveDateTime times in Rust.
+Convert various epoch times to [chrono::NaiveDateTime](https://lifthrasiir.github.io/rust-chrono/chrono/naive/datetime/struct.NaiveDateTime.html) times in [Rust](https://www.rust-lang.org).
 
 ## See Also
 
