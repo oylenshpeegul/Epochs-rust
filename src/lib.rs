@@ -1,13 +1,20 @@
+//! Convert various epoch times to chrono::NaiveDateTime times.
+
 extern crate chrono;
 
 use chrono::NaiveDateTime;
 
+/// epoch2time adjusts the given epoch x by the given dividend d and
+/// shift s and returns the result as a chrono::NaiveDateTime.
 fn epoch2time(x: i64, d: i64, s: i64) -> NaiveDateTime {
     let q = x / d;
     let n = ((x % d) * (1_000_000_000/d)) as u32;
     NaiveDateTime::from_timestamp(q + s, n)
 }
 
+/// time2epoch adjusts the given chrono::NaiveDateTime ndt by the
+/// multiplier m and the shift s and returns the result as a 64-bit
+/// integer.
 fn time2epoch(ndt: NaiveDateTime, m: i64, s: i64) -> i64 {
     let n = ndt.timestamp_subsec_nanos() as f64;
     let q = n / 1_000_000_000.0;
@@ -17,54 +24,81 @@ fn time2epoch(ndt: NaiveDateTime, m: i64, s: i64) -> i64 {
     (mf * (t + q - sf)) as i64
 }
 
+/// Chrome time is the number of microseconds since 1601-01-01, which
+/// is 11,644,473,600 seconds before the Unix epoch.
 pub fn chrome (num: i64) -> NaiveDateTime {
 	epoch2time(num, 1_000_000, -11_644_473_600)
 }
 pub fn to_chrome (ndt: NaiveDateTime) -> i64 {
 	time2epoch(ndt, 1_000_000, -11_644_473_600)
 }
+
+/// Cocoa time is the number of seconds since 2001-01-01, which is
+/// 978,307,200 seconds after the Unix epoch.
 pub fn cocoa (num: i64) -> NaiveDateTime {
 	epoch2time(num, 1, 978_307_200)
 }
 pub fn to_cocoa (ndt: NaiveDateTime) -> i64 {
 	time2epoch(ndt, 1, 978_307_200)
 }
+
+/// Java time is the number of milliseconds since the Unix epoch.
 pub fn java (num: i64) -> NaiveDateTime {
 	epoch2time(num, 1000, 0)
 }
 pub fn to_java (ndt: NaiveDateTime) -> i64 {
 	time2epoch(ndt, 1000, 0)
 }
+
+/// Mozilla time (e.g., Firefox) is the number microseconds since the
+/// Unix epoch.
 pub fn mozilla (num: i64) -> NaiveDateTime {
 	epoch2time(num, 1_000_000, 0)
 }
 pub fn to_mozilla (ndt: NaiveDateTime) -> i64 {
 	time2epoch(ndt, 1_000_000, 0)
 }
+
+/// Symbian time is the number of microseconds since the year 0, which
+/// is 62,167,219,200 seconds before the Unix epoch.
 pub fn symbian (num: i64) -> NaiveDateTime {
     epoch2time(num, 1_000_000, -62_167_219_200)
 }
 pub fn to_symbian (ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1_000_000, -62_167_219_200)
 }
+
+/// Unix time is the number seconds since 1970-01-01.
 pub fn unix (num: i64) -> NaiveDateTime {
     epoch2time(num, 1, 0)
 }
 pub fn to_unix (ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1, 0)
 }
+
+/// UUID version 1 time (RFC 4122) is the number of hectonanoseconds
+/// (100 ns) since 1582-10-15, which is 12,219,292,800 seconds before
+/// the Unix epoch.
 pub fn uuid_v1 (num: i64) -> NaiveDateTime {
 	epoch2time(num, 10_000_000, -12_219_292_800)
 }
 pub fn to_uuid_v1 (ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 10_000_000, -12_219_292_800)
 }
+
+/// Windows date time (e.g., .NET) is the number of hectonanoseconds
+/// (100 ns) since 0001-01-01, which is 62,135,596,800 seconds before
+/// the Unix epoch.
 pub fn windows_date (num: i64) -> NaiveDateTime {
     epoch2time(num, 10_000_000, -62_135_596_800)
 }
 pub fn to_windows_date (ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 10_000_000, -62_135_596_800)
 }
+
+/// Windows file time (e.g., NTFS) is the number of hectonanoseconds
+/// (100 ns) since 1601-01-01, which is 11,644,473,600 seconds before
+/// the Unix epoch.
 pub fn windows_file (num: i64) -> NaiveDateTime {
     epoch2time(num, 10_000_000, -11_644_473_600)
 }
