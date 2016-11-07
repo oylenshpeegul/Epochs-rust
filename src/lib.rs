@@ -2,7 +2,7 @@
 
 extern crate chrono;
 
-use chrono::NaiveDateTime;
+use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
 
 /// epoch2time adjusts the given epoch x by the given dividend d and
 /// shift s and returns the result as a chrono::NaiveDateTime.
@@ -40,6 +40,37 @@ pub fn cocoa (num: i64) -> NaiveDateTime {
 }
 pub fn to_cocoa (ndt: NaiveDateTime) -> i64 {
 	time2epoch(ndt, 1, 978_307_200)
+}
+
+/// Google Calendar time seems to count 32-day months from the day
+/// before the Unix epoch. @noppers worked out how to do this.
+pub fn google_calendar (num: i64) -> NaiveDateTime {
+
+    let seconds_per_day = 24 * 60 * 60;
+    let total_days = num / seconds_per_day;
+    let seconds = num % seconds_per_day;
+
+    let months = total_days / 32;
+    let days = total_days % 32;
+
+    let years = months / 12;
+    let months = months % 12;
+    
+    let ndt = NaiveDate::from_ymd(1969, 12, 31).and_hms(0, 0, 0);
+
+    let ndt2 = ndt + Duration::days(days);
+    //let ndt3 = ndt + plus_months(months);
+    let ndt3 = ndt2 + Duration::days(365*years) + Duration::days(31*months);
+    let ndt4 = ndt3 + Duration::seconds(seconds);
+    ndt4
+}
+pub fn to_google_calendar (ndt: NaiveDateTime) -> i64 {
+    (((((ndt.year()   as i64 - 1970)*12
+      + (ndt.month()  as i64 -   1))*32
+      +  ndt.day()    as i64       )*24
+      +  ndt.hour()   as i64       )*60
+      +  ndt.minute() as i64       )*60
+      +  ndt.second() as i64
 }
 
 /// Java time is the number of milliseconds since the Unix epoch.
@@ -139,6 +170,17 @@ mod tests {
         assert_eq!(to_cocoa(ndt), 256260690);
     }
 
+    #[test]
+    fn google_calendar_run() {
+        let ndt = google_calendar(1297899090);
+        assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+    }
+    #[test]
+    fn to_google_run() {
+        let ndt = NaiveDate::from_ymd(2009, 2, 13).and_hms(23, 31, 30);
+        assert_eq!(to_google_calendar(ndt), 1297899090);
+    }
+    
     #[test]
     fn java_run() {
         let ndt = java(1234567890000);
