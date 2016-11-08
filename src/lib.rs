@@ -4,26 +4,6 @@ extern crate chrono;
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
 
-/// epoch2time adjusts the given epoch x by the given dividend d and
-/// shift s and returns the result as a chrono::NaiveDateTime.
-fn epoch2time(x: i64, d: i64, s: i64) -> NaiveDateTime {
-    let q = x / d;
-    let n = ((x % d) * (1_000_000_000/d)) as u32;
-    NaiveDateTime::from_timestamp(q + s, n)
-}
-
-/// time2epoch adjusts the given chrono::NaiveDateTime ndt by the
-/// multiplier m and the shift s and returns the result as a 64-bit
-/// integer.
-fn time2epoch(ndt: NaiveDateTime, m: i64, s: i64) -> i64 {
-    let n = ndt.timestamp_subsec_nanos() as f64;
-    let q = n / 1_000_000_000.0;
-    let t = ndt.timestamp() as f64;
-    let sf = s as f64;
-    let mf = m as f64;
-    (mf * (t + q - sf)) as i64
-}
-
 /// Chrome time is the number of microseconds since 1601-01-01, which
 /// is 11,644,473,600 seconds before the Unix epoch.
 pub fn chrome (num: i64) -> NaiveDateTime {
@@ -53,15 +33,18 @@ pub fn google_calendar (num: i64) -> NaiveDateTime {
     let months = total_days / 32;
     let days = total_days % 32;
 
-    let years = months / 12;
-    let months = months % 12;
-    
+    // The Google epoch starts a day early.
     let ndt = NaiveDate::from_ymd(1969, 12, 31).and_hms(0, 0, 0);
 
+    // First, add the days...
     let ndt2 = ndt + Duration::days(days);
-    //let ndt3 = ndt + plus_months(months);
-    let ndt3 = ndt2 + Duration::days(365*years) + Duration::days(31*months);
+
+    // ...then the months...
+    let ndt3 = plus_months(ndt2, months);
+
+    // ...then the seconds...
     let ndt4 = ndt3 + Duration::seconds(seconds);
+
     ndt4
 }
 pub fn to_google_calendar (ndt: NaiveDateTime) -> i64 {
@@ -136,7 +119,61 @@ pub fn windows_file (num: i64) -> NaiveDateTime {
 pub fn to_windows_file (ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 10_000_000, -11_644_473_600)
 }
-    
+
+/// epoch2time adjusts the given epoch x by the given dividend d and
+/// shift s and returns the result as a chrono::NaiveDateTime.
+fn epoch2time(x: i64, d: i64, s: i64) -> NaiveDateTime {
+    let q = x / d;
+    let n = ((x % d) * (1_000_000_000/d)) as u32;
+    NaiveDateTime::from_timestamp(q + s, n)
+}
+
+/// time2epoch adjusts the given chrono::NaiveDateTime ndt by the
+/// multiplier m and the shift s and returns the result as a 64-bit
+/// integer.
+fn time2epoch(ndt: NaiveDateTime, m: i64, s: i64) -> i64 {
+    let n = ndt.timestamp_subsec_nanos() as f64;
+    let q = n / 1_000_000_000.0;
+    let t = ndt.timestamp() as f64;
+    let sf = s as f64;
+    let mf = m as f64;
+    (mf * (t + q - sf)) as i64
+}
+
+/// This function appears in the chrono documentation, but is not
+/// actually provided as part of the package.
+///
+/// https://lifthrasiir.github.io/rust-chrono/chrono/naive/date/struct.NaiveDate.html#method.day
+///
+/// Combined with NaiveDate::pred, one can determine the number of
+/// days in a particular month. (Note that this panics when year is
+/// out of range.)
+fn ndays_in_month(year: i32, month: u32) -> u32 {
+    // the first day of the next month...
+    let (y, m) = if month == 12 { (year + 1, 1) } else { (year, month + 1) };
+    let d = NaiveDate::from_ymd(y, m, 1);
+
+    // ...is preceded by the last day of the original month
+    d.pred().day()
+}
+
+/// Add a month to the given NaiveDateTime by finding out how many
+/// days are in the current month and adding that many days.
+fn plus_month(ndt: NaiveDateTime) -> NaiveDateTime {
+    let days = ndays_in_month(ndt.year(), ndt.month()) as i64;
+    ndt + Duration::days(days)
+}
+
+/// Add each month one at a time.
+fn plus_months(ndt: NaiveDateTime, months: i64) -> NaiveDateTime {
+    let mut m = ndt;
+    for _i in 0..months {
+        m = plus_month(m);
+    }
+    m
+}
+
+
 #[cfg(test)]
 mod tests {
 
@@ -176,7 +213,7 @@ mod tests {
         assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
     }
     #[test]
-    fn to_google_run() {
+    fn to_google_calendar_run() {
         let ndt = NaiveDate::from_ymd(2009, 2, 13).and_hms(23, 31, 30);
         assert_eq!(to_google_calendar(ndt), 1297899090);
     }
