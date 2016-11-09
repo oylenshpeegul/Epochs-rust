@@ -56,6 +56,23 @@ pub fn to_google_calendar (ndt: NaiveDateTime) -> i64 {
       +  ndt.second() as i64
 }
 
+/// ICQ time is the number of days since 1899-12-30. Days can have a
+/// fractional part.
+pub fn icq (days: f64) -> NaiveDateTime {
+    let millis_per_day = (24 * 60 * 60 * 1000) as f64;
+    let intdays = days as i64;
+    let milliseconds = ((days - (intdays as f64)) * millis_per_day) as i64;
+
+    NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0)
+        + Duration::days(intdays)
+        + Duration::milliseconds(milliseconds)
+}
+pub fn to_icq (ndt: NaiveDateTime) -> f64 {
+    let millis_per_day = (24 * 60 * 60 * 1000) as f64;
+    let diff = ndt - NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
+    diff.num_milliseconds() as f64 / millis_per_day
+}
+
 /// Java time is the number of milliseconds since the Unix epoch.
 pub fn java (num: i64) -> NaiveDateTime {
 	epoch2time(num, 1000, 0)
@@ -218,6 +235,28 @@ mod tests {
         assert_eq!(to_google_calendar(ndt), 1297899090);
     }
     
+    #[test]
+    fn icq_run() {
+        let ndt = icq(39857.980209);
+        assert_eq!(ndt.to_string(), "2009-02-13 23:31:30.057");
+    }
+    #[test]
+    fn icq_frac() {
+        let ndt = icq(41056.275208);
+        assert_eq!(ndt.to_string(), "2012-05-27 06:36:17.971");
+    }
+    #[test]
+    fn to_icq_run() {
+        let ndt = NaiveDate::from_ymd(2009, 2, 13).and_hms(23, 31, 30);
+        assert!(to_icq(ndt) - 39857.980209 < 1e-6);
+    }
+    #[test]
+    fn to_icq_frac() {
+        let ndt =
+            NaiveDate::from_ymd(2012, 5, 27).and_hms_milli(6, 36, 17, 971);
+        assert!(to_icq(ndt) - 41056.275208 < 1e-6);
+    }
+
     #[test]
     fn java_run() {
         let ndt = java(1234567890000);
