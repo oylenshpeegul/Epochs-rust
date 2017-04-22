@@ -4,6 +4,15 @@ extern crate chrono;
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
 
+/// APFS time is the number of nanoseconds since the Unix epoch.
+/// Cf., APFS filesystem format (https://blog.cugu.eu/post/apfs/).
+pub fn apfs (num: i64) -> NaiveDateTime {
+	epoch2time(num, 1_000_000_000, 0)
+}
+pub fn to_apfs (ndt: NaiveDateTime) -> i64 {
+	time2epoch(ndt, 1_000_000_000, 0)
+}
+
 /// Chrome time is the number of microseconds since 1601-01-01, which
 /// is 11,644,473,600 seconds before the Unix epoch.
 pub fn chrome (num: i64) -> NaiveDateTime {
@@ -81,8 +90,8 @@ pub fn to_java (ndt: NaiveDateTime) -> i64 {
 	time2epoch(ndt, 1000, 0)
 }
 
-/// Mozilla time (e.g., Firefox) is the number microseconds since the
-/// Unix epoch.
+/// Mozilla time (e.g., Firefox) is the number of microseconds since
+/// the Unix epoch.
 pub fn mozilla (num: i64) -> NaiveDateTime {
 	epoch2time(num, 1_000_000, 0)
 }
@@ -196,6 +205,17 @@ mod tests {
 
     use super::*;
     use chrono::NaiveDate;
+
+    #[test]
+    fn apfs_run() {
+        let ndt = apfs(1234567890000000000);
+        assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+    }
+    #[test]
+    fn to_apfs_run() {
+        let ndt = NaiveDate::from_ymd(2009, 2, 13).and_hms(23, 31, 30);
+        assert_eq!(to_apfs(ndt), 1234567890000000000);
+    }
     
     #[test]
     fn chrome_run() {
