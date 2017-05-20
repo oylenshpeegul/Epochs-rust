@@ -22,7 +22,7 @@ $ ./use_epochs
 
 ## See Also
 
-This project was originally done in [Perl](https://github.com/oylenshpeegul/Time-Moment-Epoch). See [the Time::Moment::Epoch web page](http://oylenshpeegul.github.io/Time::Moment::Epoch/) for motivation.
+This project was originally done in [Perl](https://github.com/oylenshpeegul/Time-Moment-Epoch). See [the Time::Moment::Epoch web page](http://oylenshpeegul.github.io/Time-Moment-Epoch/) for motivation.
 
 There are also versions in:
 - [Go](https://github.com/oylenshpeegul/epochs)
