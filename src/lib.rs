@@ -197,10 +197,10 @@ fn plus_month(ndt: NaiveDateTime) -> NaiveDateTime {
 
 /// Add the given number of months to the given NaiveDateTime.
 fn plus_months(ndt: NaiveDateTime, months: i64) -> Option<NaiveDateTime> {
-    let years = months / 12;
+    let years = (months / 12) as i32;
     let months = months % 12;
 
-    let mut m = ndt.with_year(ndt.year() + years as i32)?;
+    let mut m = ndt.with_year(ndt.year() + years)?;
 
     for _i in 0..months {
         m = plus_month(m);
