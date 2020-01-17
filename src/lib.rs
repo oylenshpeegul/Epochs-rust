@@ -84,7 +84,6 @@ pub fn icq(days: f64) -> Option<NaiveDateTime> {
         .and_hms(0, 0, 0)
         .checked_add_signed(Duration::days(intdays))?
         .checked_add_signed(Duration::milliseconds(milliseconds))
-
 }
 pub fn to_icq(ndt: NaiveDateTime) -> f64 {
     let diff = ndt - NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
