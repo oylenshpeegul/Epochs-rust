@@ -4,6 +4,12 @@ extern crate chrono;
 
 use chrono::{Datelike, Duration, NaiveDate, NaiveDateTime, Timelike};
 
+// The icq function uses time::Duration, which panics if given too big
+// a number. The maximum is i64::MAX milliseconds.
+const MAX_DAYS: i64 = std::i64::MAX / (24 * 60 * 60 * 1000);
+
+const MILLIS_PER_DAY: f64 = 24. * 60. * 60. * 1000.;
+
 /// APFS time is the number of nanoseconds since the Unix epoch.
 /// Cf., APFS filesystem format (https://blog.cugu.eu/post/apfs/).
 pub fn apfs(num: i64) -> Option<NaiveDateTime> {
@@ -67,19 +73,26 @@ pub fn to_google_calendar(ndt: NaiveDateTime) -> i64 {
 /// ICQ time is the number of days since 1899-12-30. Days can have a
 /// fractional part.
 pub fn icq(days: f64) -> Option<NaiveDateTime> {
-    let millis_per_day = (24 * 60 * 60 * 1000) as f64;
     let intdays = days as i64;
-    let milliseconds = ((days - (intdays as f64)) * millis_per_day) as i64;
+    if intdays > MAX_DAYS {
+        return None;
+    }
+
+    let milliseconds = ((days - (intdays as f64)) * MILLIS_PER_DAY) as i64;
 
     let ndt = NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
     let ndt = ndt.checked_add_signed(Duration::days(intdays))?;
 
+    println!("{:?}", milliseconds);
+    println!("{:?}", std::i64::MAX);
+    let d = Duration::milliseconds(milliseconds);
+    println!("{:?}", d);
+
     ndt.checked_add_signed(Duration::milliseconds(milliseconds))
 }
 pub fn to_icq(ndt: NaiveDateTime) -> f64 {
-    let millis_per_day = (24 * 60 * 60 * 1000) as f64;
     let diff = ndt - NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
-    diff.num_milliseconds() as f64 / millis_per_day
+    diff.num_milliseconds() as f64 / MILLIS_PER_DAY
 }
 
 /// Java time is the number of milliseconds since the Unix epoch.
@@ -275,6 +288,11 @@ mod tests {
     #[test]
     fn icq_too_big() {
         let obs = icq(398570000.980209);
+        assert_eq!(obs.is_none(), true);
+    }
+    #[test]
+    fn icq_way_too_big() {
+        let obs = icq(123456789012.0);
         assert_eq!(obs.is_none(), true);
     }
     #[test]
