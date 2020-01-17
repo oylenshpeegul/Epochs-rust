@@ -80,10 +80,11 @@ pub fn icq(days: f64) -> Option<NaiveDateTime> {
 
     let milliseconds = ((days - (intdays as f64)) * MILLIS_PER_DAY) as i64;
 
-    let ndt = NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
-    let ndt = ndt.checked_add_signed(Duration::days(intdays))?;
+    NaiveDate::from_ymd(1899, 12, 30)
+        .and_hms(0, 0, 0)
+        .checked_add_signed(Duration::days(intdays))?
+        .checked_add_signed(Duration::milliseconds(milliseconds))
 
-    ndt.checked_add_signed(Duration::milliseconds(milliseconds))
 }
 pub fn to_icq(ndt: NaiveDateTime) -> f64 {
     let diff = ndt - NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
