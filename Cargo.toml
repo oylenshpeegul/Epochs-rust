@@ -4,6 +4,7 @@ version = "0.2.0"
 authors = ["oylenshpeegul <oylenshpeegul@gmail.com>"]
 description = "Convert various epoch times to chrono::NaiveDateTime times."
 license = "MPL-2.0"
+repository = "https://github.com/oylenshpeegul/Epochs-rust"
 
 [dependencies]
 chrono = "0.4"
