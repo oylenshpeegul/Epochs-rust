@@ -2,6 +2,8 @@
 name = "epochs"
 version = "0.2.0"
 authors = ["oylenshpeegul <oylenshpeegul@gmail.com>"]
+description = "Convert various epoch times to chrono::NaiveDateTime times."
+license = "MPL-2.0"
 
 [dependencies]
 chrono = "0.4"
