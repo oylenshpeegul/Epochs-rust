@@ -83,11 +83,6 @@ pub fn icq(days: f64) -> Option<NaiveDateTime> {
     let ndt = NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
     let ndt = ndt.checked_add_signed(Duration::days(intdays))?;
 
-    println!("{:?}", milliseconds);
-    println!("{:?}", std::i64::MAX);
-    let d = Duration::milliseconds(milliseconds);
-    println!("{:?}", d);
-
     ndt.checked_add_signed(Duration::milliseconds(milliseconds))
 }
 pub fn to_icq(ndt: NaiveDateTime) -> f64 {
