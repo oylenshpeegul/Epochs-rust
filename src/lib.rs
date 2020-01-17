@@ -257,7 +257,7 @@ mod tests {
         assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
     }
     #[test]
-    fn google_calendar_toobig() {
+    fn google_calendar_too_big() {
         let obs = google_calendar(12978990900000);
         assert_eq!(obs.is_none(), true);
     }
@@ -271,6 +271,11 @@ mod tests {
     fn icq_run() {
         let ndt = icq(39857.980209).unwrap();
         assert_eq!(ndt.to_string(), "2009-02-13 23:31:30.057");
+    }
+    #[test]
+    fn icq_too_big() {
+        let obs = icq(398570000.980209);
+        assert_eq!(obs.is_none(), true);
     }
     #[test]
     fn icq_frac() {
