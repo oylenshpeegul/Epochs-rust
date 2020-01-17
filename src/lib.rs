@@ -173,26 +173,25 @@ fn time2epoch(ndt: NaiveDateTime, m: i64, s: i64) -> i64 {
 /// https://lifthrasiir.github.io/rust-chrono/chrono/naive/date/struct.NaiveDate.html#method.day
 ///
 /// Combined with NaiveDate::pred, one can determine the number of
-/// days in a particular month. (Note that this panics when year is
-/// out of range.)
-fn ndays_in_month(year: i32, month: u32) -> u32 {
+/// days in a particular month.
+fn ndays_in_month(year: i32, month: u32) -> Option<i64> {
     // the first day of the next month...
     let (y, m) = if month == 12 {
         (year + 1, 1)
     } else {
         (year, month + 1)
     };
-    let d = NaiveDate::from_ymd(y, m, 1);
+    let d = NaiveDate::from_ymd_opt(y, m, 1)?;
 
     // ...is preceded by the last day of the original month
-    d.pred().day()
+    Some(d.pred().day() as i64)
 }
 
 /// Add a month to the given NaiveDateTime by finding out how many
 /// days are in the current month and adding that many days.
-fn plus_month(ndt: NaiveDateTime) -> NaiveDateTime {
-    let days = ndays_in_month(ndt.year(), ndt.month()) as i64;
-    ndt + Duration::days(days)
+fn plus_month(ndt: NaiveDateTime) -> Option<NaiveDateTime> {
+    let days = ndays_in_month(ndt.year(), ndt.month())?;
+    Some(ndt + Duration::days(days))
 }
 
 /// Add the given number of months to the given NaiveDateTime.
@@ -200,12 +199,12 @@ fn plus_months(ndt: NaiveDateTime, months: i64) -> Option<NaiveDateTime> {
     let years = (months / 12) as i32;
     let months = months % 12;
 
-    let mut m = ndt.with_year(ndt.year() + years)?;
+    let mut ndt = ndt.with_year(ndt.year() + years)?;
 
     for _i in 0..months {
-        m = plus_month(m);
+        ndt = plus_month(ndt)?;
     }
-    Some(m)
+    Some(ndt)
 }
 
 #[cfg(test)]
@@ -256,6 +255,11 @@ mod tests {
     fn google_calendar_run() {
         let ndt = google_calendar(1297899090).unwrap();
         assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+    }
+    #[test]
+    fn google_calendar_toobig() {
+        let obs = google_calendar(12978990900000);
+        assert_eq!(obs.is_none(), true);
     }
     #[test]
     fn to_google_calendar_run() {
