@@ -1,6 +1,6 @@
 [package]
 name = "epochs"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["oylenshpeegul <oylenshpeegul@gmail.com>"]
 description = "Convert various epoch times to chrono::NaiveDateTime times."
 license = "MPL-2.0"
