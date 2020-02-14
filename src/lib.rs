@@ -1,4 +1,4 @@
-//! Convert various epoch times to chrono::NaiveDateTime times.
+//! Convert various epoch times to [chrono::NaiveDateTime](https://docs.rs/chrono/0.4.10/chrono/naive/struct.NaiveDateTime.html) times.
 
 extern crate chrono;
 
@@ -10,35 +10,90 @@ const MAX_DAYS: i64 = std::i64::MAX / (24 * 60 * 60 * 1000);
 
 const MILLIS_PER_DAY: f64 = 24. * 60. * 60. * 1000.;
 
-/// APFS time is the number of nanoseconds since the Unix epoch.
-/// Cf., APFS filesystem format (https://blog.cugu.eu/post/apfs/).
+/// APFS time is the number of nanoseconds since the Unix epoch
+/// (*cf.*, [APFS filesystem format](https://blog.cugu.eu/post/apfs/)).
+///
+/// ```
+/// use epochs::apfs;
+/// let ndt = apfs(1_234_567_890_000_000_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn apfs(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 1_000_000_000, 0)
 }
+
+/// Convert the given NaiveDateTime to an [APFS](fn.apfs.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_apfs;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_apfs(ndt), 1_234_567_890_000_000_000);
+/// ```
 pub fn to_apfs(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1_000_000_000, 0)
 }
 
 /// Chrome time is the number of microseconds since 1601-01-01, which
 /// is 11,644,473,600 seconds before the Unix epoch.
+///
+/// ```
+/// use epochs::chrome;
+/// let ndt = chrome(12_879_041_490_000_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn chrome(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 1_000_000, -11_644_473_600)
 }
+
+/// Convert the given NaiveDateTime to a [Chrome](fn.chrome.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_chrome;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_chrome(ndt), 12_879_041_490_000_000);
+/// ```
 pub fn to_chrome(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1_000_000, -11_644_473_600)
 }
 
 /// Cocoa time is the number of seconds since 2001-01-01, which is
 /// 978,307,200 seconds after the Unix epoch.
+///
+/// ```
+/// use epochs::cocoa;
+/// let ndt = cocoa(256260690).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn cocoa(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 1, 978_307_200)
 }
+
+/// Convert the given NaiveDateTime to a [Cocoa](fn.cocoa.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_cocoa;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_cocoa(ndt), 256260690);
+/// ```
 pub fn to_cocoa(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1, 978_307_200)
 }
 
 /// Google Calendar time seems to count 32-day months from the day
-/// before the Unix epoch. @noppers worked out how to do this.
+/// before the Unix epoch ([@noppers](https://github.com/noppers)
+/// worked out how to do this).
+///
+/// ```
+/// use epochs::google_calendar;
+/// let ndt = google_calendar(1297899090).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn google_calendar(num: i64) -> Option<NaiveDateTime> {
     let seconds_per_day = 24 * 60 * 60;
     let total_days = num / seconds_per_day;
@@ -61,6 +116,17 @@ pub fn google_calendar(num: i64) -> Option<NaiveDateTime> {
 
     Some(ndt)
 }
+
+/// Convert the given NaiveDateTime to a [Google
+/// Calendar](fn.google_calendar.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_google_calendar;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_google_calendar(ndt), 1297899090);
+/// ```
 pub fn to_google_calendar(ndt: NaiveDateTime) -> i64 {
     (((((ndt.year() as i64 - 1970) * 12 + (ndt.month() as i64 - 1)) * 32 + ndt.day() as i64) * 24
         + ndt.hour() as i64)
@@ -72,6 +138,12 @@ pub fn to_google_calendar(ndt: NaiveDateTime) -> i64 {
 
 /// ICQ time is the number of days since 1899-12-30. Days can have a
 /// fractional part.
+///
+/// ```
+/// use epochs::icq;
+/// let ndt = icq(39857.980208333334).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn icq(days: f64) -> Option<NaiveDateTime> {
     let intdays = days as i64;
     if intdays > MAX_DAYS {
@@ -85,51 +157,166 @@ pub fn icq(days: f64) -> Option<NaiveDateTime> {
         .checked_add_signed(Duration::days(intdays))?
         .checked_add_signed(Duration::milliseconds(milliseconds))
 }
+
+/// Convert the given NaiveDateTime to an [ICQ](fn.icq.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_icq;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_icq(ndt), 39857.980208333334);
+/// ```
 pub fn to_icq(ndt: NaiveDateTime) -> f64 {
     let diff = ndt - NaiveDate::from_ymd(1899, 12, 30).and_hms(0, 0, 0);
     diff.num_milliseconds() as f64 / MILLIS_PER_DAY
 }
 
 /// Java time is the number of milliseconds since the Unix epoch.
+///
+/// ```
+/// use epochs::java;
+/// let ndt = java(1_234_567_890_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn java(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 1000, 0)
 }
+
+/// Convert the given NaiveDateTime to a [Java](fn.java.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_java;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_java(ndt), 1_234_567_890_000);
+/// ```
 pub fn to_java(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1000, 0)
 }
 
-/// Mozilla time (e.g., Firefox) is the number of microseconds since
+/// Mozilla time (*e.g.*, Firefox) is the number of microseconds since
 /// the Unix epoch.
+///
+/// ```
+/// use epochs::mozilla;
+/// let ndt = mozilla(1_234_567_890_000_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn mozilla(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 1_000_000, 0)
 }
+
+/// Convert the given NaiveDateTime to a [Mozilla](fn.mozilla.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_mozilla;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_mozilla(ndt), 1_234_567_890_000_000);
+/// ```
 pub fn to_mozilla(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1_000_000, 0)
 }
 
 /// Symbian time is the number of microseconds since the year 0, which
 /// is 62,167,219,200 seconds before the Unix epoch.
+///
+/// ```
+/// use epochs::symbian;
+/// let ndt = symbian(63_401_787_090_000_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn symbian(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 1_000_000, -62_167_219_200)
 }
+
+/// Convert the given NaiveDateTime to a [Symbian](fn.symbian.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_symbian;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_symbian(ndt), 63_401_787_090_000_000);
+/// ```
 pub fn to_symbian(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1_000_000, -62_167_219_200)
 }
 
-/// Unix time is the number seconds since 1970-01-01.
+/// Unix time is the number of seconds since 1970-01-01.
+///
+/// ```
+/// use epochs::unix;
+/// let ndt = unix(1234567890).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn unix(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 1, 0)
 }
+
+/// Convert the given NaiveDateTime to a [Unix](fn.unix.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_unix;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_unix(ndt), 1234567890);
+/// ```
 pub fn to_unix(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 1, 0)
 }
 
-/// UUID version 1 time (RFC 4122) is the number of hectonanoseconds
-/// (100 ns) since 1582-10-15, which is 12,219,292,800 seconds before
-/// the Unix epoch.
+/// UUID version 1 time ([RFC
+/// 4122](https://tools.ietf.org/html/rfc4122)) is the number of
+/// hectonanoseconds (100 ns) since 1582-10-15, which is
+/// 12,219,292,800 seconds before the Unix epoch.
+///
+/// ```
+/// use epochs::uuid_v1;
+/// let ndt = uuid_v1(134_538_606_900_000_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
+/// 
+
+/// UUIDs typically appear in "8-4-4-4-12" strings like
+/// 
+/// &nbsp;&nbsp;&nbsp;&nbsp; ca4892ce-4f7d-11ea-b77f-2e728ce88125
+/// 
+/// where the timestamp portion is buried inside. This one is
+/// "2020-02-14 23:00:27.148155". That first 1,
+/// 
+/// &nbsp;&nbsp;&nbsp;&nbsp; ca4892ce-4f7d-**1**1ea-b77f-2e728ce88125
+/// 
+/// means it's a version 1 UUID (other versions don't have timestamps
+/// in them), so it's appropriate to take these bytes,
+/// 
+/// &nbsp;&nbsp;&nbsp;&nbsp; **ca4892ce**-**4f7d**-1**1ea**-b77f-2e728ce88125
+/// 
+/// make an integer, 0x1ea4f7dca4892ce, and
+/// perform the calculation in this module on it.
+/// 
+/// ```
+/// use epochs::uuid_v1;
+/// let ndt = uuid_v1(0x1ea4f7dca4892ce).unwrap();
+/// assert_eq!(ndt.to_string(), "2020-02-14 23:00:27.148155");
+/// ```
 pub fn uuid_v1(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 10_000_000, -12_219_292_800)
 }
+
+/// Convert the given NaiveDateTime to a [UUIDv1](fn.uuid_v1.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_uuid_v1;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_uuid_v1(ndt), 134_538_606_900_000_000);
+/// ```
 pub fn to_uuid_v1(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 10_000_000, -12_219_292_800)
 }
@@ -137,9 +324,26 @@ pub fn to_uuid_v1(ndt: NaiveDateTime) -> i64 {
 /// Windows date time (e.g., .NET) is the number of hectonanoseconds
 /// (100 ns) since 0001-01-01, which is 62,135,596,800 seconds before
 /// the Unix epoch.
+///
+/// ```
+/// use epochs::windows_date;
+/// let ndt = windows_date(633_701_646_900_000_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn windows_date(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 10_000_000, -62_135_596_800)
 }
+
+/// Convert the given NaiveDateTime to a [Windows
+/// Date](fn.windows_date.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_windows_date;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_windows_date(ndt), 633_701_646_900_000_000);
+/// ```
 pub fn to_windows_date(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 10_000_000, -62_135_596_800)
 }
@@ -147,9 +351,26 @@ pub fn to_windows_date(ndt: NaiveDateTime) -> i64 {
 /// Windows file time (e.g., NTFS) is the number of hectonanoseconds
 /// (100 ns) since 1601-01-01, which is 11,644,473,600 seconds before
 /// the Unix epoch.
+///
+/// ```
+/// use epochs::windows_file;
+/// let ndt = windows_file(128_790_414_900_000_000).unwrap();
+/// assert_eq!(ndt.to_string(), "2009-02-13 23:31:30");
+/// ```
 pub fn windows_file(num: i64) -> Option<NaiveDateTime> {
     epoch2time(num, 10_000_000, -11_644_473_600)
 }
+
+/// Convert the given NaiveDateTime to a [Windows
+/// File](fn.windows_file.html) time.
+///
+/// ```
+///# extern crate chrono;
+/// use chrono::NaiveDateTime;
+/// use epochs::to_windows_file;
+/// let ndt = NaiveDateTime::parse_from_str("2009-02-13 23:31:30", "%Y-%m-%d %H:%M:%S").unwrap();
+/// assert_eq!(to_windows_file(ndt), 128_790_414_900_000_000);
+/// ```
 pub fn to_windows_file(ndt: NaiveDateTime) -> i64 {
     time2epoch(ndt, 10_000_000, -11_644_473_600)
 }
